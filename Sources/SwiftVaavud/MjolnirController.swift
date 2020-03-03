@@ -10,6 +10,7 @@ import Foundation
 import CoreMotion
 import Combine
 
+@available(iOS 13.0, *)
 public class MjolnirController {
     
     static let fq40FFTLenght = 64

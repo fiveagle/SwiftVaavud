@@ -8,7 +8,9 @@
 
 import Foundation
 import CoreMotion
+import QuartzCore
 
+@available(iOS 13.0, *)
 public class MagneticFieldController: ObservableObject {
     
     static let sampleFrequency = 100

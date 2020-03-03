@@ -9,6 +9,7 @@
 import Foundation
 import CoreMotion
 
+@available(iOS 13.0, *)
 public class MotionController: ObservableObject {
     
     //MARK: - Constants

@@ -9,6 +9,7 @@
 import Foundation
 import Accelerate
 
+@available(iOS 13.0, *)
 public class SignalAnalyzer {
     
     let fftLength: Int
