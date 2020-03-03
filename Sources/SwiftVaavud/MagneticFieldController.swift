@@ -25,11 +25,11 @@ public class MagneticFieldController: ObservableObject {
     
     //MARK: - Lifecycle
     
-    func start() {
+    public func start() {
         startMagneticFieldSensor()
     }
     
-    func stop() {
+    public func stop() {
         motionManager.stopMagnetometerUpdates()
     }
     

@@ -13,17 +13,17 @@ import CoreMotion
 public class MotionController: ObservableObject {
     
     //MARK: - Constants
-    static let accAndGyroSampleFrequency = 5
-    static let orientationDeviationMaxForValid = 0.63 // rad  (36) degrees
-    static let accelerationMaxForValid =  0.4 // g acc/(9.82 m/s^2)
-    static let angularVelocityMaxForValid =  0.4 // rad/s (maybe deg/s or another unit)
+    public static let accAndGyroSampleFrequency = 5
+    public static let orientationDeviationMaxForValid = 0.63 // rad  (36) degrees
+    public static let accelerationMaxForValid =  0.4 // g acc/(9.82 m/s^2)
+    public static let angularVelocityMaxForValid =  0.4 // rad/s (maybe deg/s or another unit)
     
     //MARK: - Validity properties
     fileprivate var accelerationIsValid: Bool = false
     fileprivate var orientationIsValid: Bool = false
     fileprivate var angularVeclocityIsValid: Bool = false
     
-    @Published var isDynamicValid: Bool = false
+    @Published public var isDynamicValid: Bool = false
     
     //MARK: - Properties
     fileprivate let motionManager = CMMotionManager()
@@ -32,7 +32,7 @@ public class MotionController: ObservableObject {
     
     //MARK: - Lifecycle
     
-    func start() {
+    public func start() {
         
         guard motionManager.isDeviceMotionAvailable == true else {
             return
@@ -85,7 +85,7 @@ public class MotionController: ObservableObject {
         }
     }
     
-    func stop() {
+    public func stop() {
         motionManager.stopDeviceMotionUpdates()
     }
     
@@ -95,7 +95,7 @@ public class MotionController: ObservableObject {
     
     //MARK: - Validity Update
     
-    func update() {
+    public func update() {
         isDynamicValid = accelerationIsValid && orientationIsValid && angularVeclocityIsValid
     }
 }

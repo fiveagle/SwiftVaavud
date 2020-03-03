@@ -12,14 +12,14 @@ import Accelerate
 @available(iOS 13.0, *)
 public class SignalAnalyzer {
     
-    let fftLength: Int
-    let fftDataLength: Int
-    let fftSetup: vDSP.FFT<DSPDoubleSplitComplex>
-    var tempSplitComplex: DSPDoubleSplitComplex
-    let scale: Double
-    let nOver2: Int
+    internal let fftLength: Int
+    internal let fftDataLength: Int
+    internal let fftSetup: vDSP.FFT<DSPDoubleSplitComplex>
+    internal var tempSplitComplex: DSPDoubleSplitComplex
+    internal let scale: Double
+    internal let nOver2: Int
     
-    init?(fftLength: Int, fftDataLength: Int) {
+    public init?(fftLength: Int, fftDataLength: Int) {
         
         self.fftLength = fftLength
         self.fftDataLength = fftDataLength
@@ -51,7 +51,7 @@ public class SignalAnalyzer {
         self.fftSetup = fftSetup
     }
     
-    func perfomAnalysis(on data: [Double]) -> [Double] {
+    public func perfomAnalysis(on data: [Double]) -> [Double] {
         
         // STEP 1 COPY DATA TO ioData, SUBTRACT MEAN, APPLY P. WELCH WINDOW, ZEROPAD
         var interleaved = data

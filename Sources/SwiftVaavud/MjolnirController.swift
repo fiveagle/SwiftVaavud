@@ -13,11 +13,11 @@ import Combine
 @available(iOS 13.0, *)
 public class MjolnirController {
     
-    static let fq40FFTLenght = 64
-    static let fq40FFTDataLenght = 50
-    static let standardFrequencyStart = 0.238
-    static let standardFrequencyFactor = 1.07
-    static let fftPeakMagnitudeMinForValid = 2.5
+    public static let fq40FFTLenght = 64
+    public static let fq40FFTDataLenght = 50
+    public static let standardFrequencyStart = 0.238
+    public static let standardFrequencyFactor = 1.07
+    public static let fftPeakMagnitudeMinForValid = 2.5
     
     //MARK: - Properties
     
@@ -40,7 +40,7 @@ public class MjolnirController {
         sumOfValidMeasurements / Double(windData.count)
     }
     
-    var sampleFrequency: Double {
+    public var sampleFrequency: Double {
         
         guard let lastTime = magneticReadings.last?.time else { return 0 }
         
@@ -55,18 +55,18 @@ public class MjolnirController {
     fileprivate var percentForValidity = 50
     fileprivate var isValidCurrentStatus = false
     
-    var windData = [(speed: Double, time: Double, isValid: Bool)]()
+    public var windData = [(speed: Double, time: Double, isValid: Bool)]()
     
     //MARK: - Lifecycle
     
-    init() {
+    public init() {
         self.motionController = MotionController()
         self.magneticController = MagneticFieldController()
         self.signalAnalyzer = SignalAnalyzer(fftLength: MjolnirController.fq40FFTLenght,
                                              fftDataLength: MjolnirController.fq40FFTDataLenght)!
     }
     
-    func start() {
+    public func start() {
         
         let _ = magneticController.objectWillChange.sink() {
             self.magneticReadings.append(self.magneticController.magneticReading)
@@ -136,14 +136,14 @@ public class MjolnirController {
         }
     }
     
-    func stop() {
+    public func stop() {
         magneticController.stop()
         motionController.stop()
     }
     
     //MARK: - Analysis
     
-    func runAnalysys() -> [Double] {
+    fileprivate func runAnalysys() -> [Double] {
         
         let modulus = magneticReadings.count % 9 / 3
         
@@ -184,7 +184,7 @@ public class MjolnirController {
         return average
     }
     
-    func computeValidity(for fftIsValid: Bool) -> Bool {
+    fileprivate func computeValidity(for fftIsValid: Bool) -> Bool {
         
         var isValid = false
             
@@ -215,7 +215,7 @@ public class MjolnirController {
 
 extension Double {
     
-    func toWindSpeed() -> Double {
+    public func toWindSpeed() -> Double {
         
         // Based on 09.07.2013 Windtunnel test. Parametes can be found in windTunnelAnalysis_9_07_2013.xlsx
         // Corrected base on data from Windtunnel test Experiment26Aug2013Data.xlsx
