@@ -176,7 +176,15 @@ public class MjolnirController {
         
         let modulus = magneticReadings.count % 9 / 3
         
-        let subArrayRange = magneticReadings.count - MjolnirController.fq40FFTDataLenght ..< MjolnirController.fq40FFTDataLenght
+        var start = 0
+        var end = magneticReadings.count - 1
+        
+        if magneticReadings.count > MjolnirController.fq40FFTDataLenght {
+            start = magneticReadings.count - MjolnirController.fq40FFTDataLenght
+            end = MjolnirController.fq40FFTDataLenght
+        }
+        
+        let subArrayRange = start ..< end
         
         let subReadings = magneticReadings[subArrayRange]
         
