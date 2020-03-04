@@ -49,13 +49,16 @@ public class MjolnirController {
         return sampleFrequency;
     }
     
-    fileprivate(set) var maxWindspeed: Double = 0
+    fileprivate(set) var maxWindSpeed: Double = 0
     
     ///isValidPercent start at 50% valid
     fileprivate var percentForValidity = 50
     fileprivate var isValidCurrentStatus = false
     
-    public var windData = [(speed: Double, time: Double, isValid: Bool)]()
+    fileprivate var windData = [WindSample]()
+    
+    private let windPublisher: PassthroughSubject<WindSample, Never>
+    var publisher: AnyPublisher<WindSample, Never>
     
     //MARK: - Lifecycle
     
@@ -64,6 +67,9 @@ public class MjolnirController {
         self.magneticController = MagneticFieldController()
         self.signalAnalyzer = SignalAnalyzer(fftLength: MjolnirController.fq40FFTLenght,
                                              fftDataLength: MjolnirController.fq40FFTDataLenght)!
+        
+        windPublisher = PassthroughSubject<WindSample, Never>()
+        publisher = windPublisher.eraseToAnyPublisher()
     }
     
     public func start() {
@@ -123,8 +129,8 @@ public class MjolnirController {
                 fftIsValid = true
                 
                 self.sumOfValidMeasurements += windSpeed
-                if windSpeed > self.maxWindspeed {
-                    self.maxWindspeed = windSpeed
+                if windSpeed > self.maxWindSpeed {
+                    self.maxWindSpeed = windSpeed
                 }
             } else {
                 fftIsValid = false
@@ -132,7 +138,16 @@ public class MjolnirController {
             
             self.isValidCurrentStatus = self.computeValidity(for: fftIsValid)
             
-            self.windData.append((windSpeed, windSpeedTime, self.isValidCurrentStatus))
+            let windAverage = self.sumOfValidMeasurements / (Double(self.windData.count) + 1)
+            
+            let sample = WindSample(speed: windSpeed,
+                                    max: self.maxWindSpeed,
+                                    average: windAverage,
+                                    time: windSpeedTime,
+                                    isValid: self.isValidCurrentStatus)
+            
+            self.windData.append(sample)
+            self.windPublisher.send(sample)
         }
     }
     

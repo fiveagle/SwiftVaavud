@@ -21,7 +21,7 @@ public class MotionController: ObservableObject {
     //MARK: - Validity properties
     fileprivate var accelerationIsValid: Bool = false
     fileprivate var orientationIsValid: Bool = false
-    fileprivate var angularVeclocityIsValid: Bool = false
+    fileprivate var angularVelocityIsValid: Bool = false
     
     @Published public var isDynamicValid: Bool = false
     
@@ -67,9 +67,9 @@ public class MotionController: ObservableObject {
             let angularVelocity = fabs(sqrt(pow(motionData.rotationRate.x, 2) + pow(motionData.rotationRate.x, 2) + pow(motionData.rotationRate.x, 2)))
             
             if angularVelocity > MotionController.angularVelocityMaxForValid {
-                self.angularVeclocityIsValid = false
+                self.angularVelocityIsValid = false
             } else {
-                self.angularVeclocityIsValid = true
+                self.angularVelocityIsValid = true
             }
             
             // acceleration
@@ -96,6 +96,6 @@ public class MotionController: ObservableObject {
     //MARK: - Validity Update
     
     public func update() {
-        isDynamicValid = accelerationIsValid && orientationIsValid && angularVeclocityIsValid
+        isDynamicValid = accelerationIsValid && orientationIsValid && angularVelocityIsValid
     }
 }
