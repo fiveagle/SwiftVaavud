@@ -181,7 +181,7 @@ public class MjolnirController {
         let modulus = magneticReadings.count % 9 / 3
         
         var start = 0
-        var end = magneticReadings.count - 1
+        var end = magneticReadings.count
         
         if magneticReadings.count > MjolnirController.fq40FFTDataLenght {
             start = magneticReadings.count - MjolnirController.fq40FFTDataLenght
