@@ -74,6 +74,9 @@ public class MjolnirController {
     
     public func start() {
         
+        magneticController.start()
+        motionController.start()
+        
         let _ = magneticController.objectWillChange.sink() {
             self.magneticReadings.append(self.magneticController.magneticReading)
             
