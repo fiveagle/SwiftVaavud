@@ -97,6 +97,10 @@ public class MjolnirController {
         
         self.magneticReadings.append(sample)
         
+        guard magneticReadings.count > MjolnirController.fq40FFTDataLenght else {
+            return
+        }
+        
         guard self.magneticReadings.count % 3 == 0 else {
             return
         }
