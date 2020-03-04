@@ -58,7 +58,7 @@ public class MjolnirController {
     fileprivate var windData = [WindSample]()
     
     private let windPublisher: PassthroughSubject<WindSample, Never>
-    var publisher: AnyPublisher<WindSample, Never>
+    public var publisher: AnyPublisher<WindSample, Never>
     
     //MARK: - Lifecycle
     
