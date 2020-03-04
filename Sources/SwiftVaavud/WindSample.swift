@@ -9,9 +9,9 @@ import Foundation
 
 public struct WindSample {
     
-    let speed: Double
-    let max: Double
-    let average: Double
-    let time: Double
-    let isValid: Bool
+    public let speed: Double
+    public let max: Double
+    public let average: Double
+    public let time: Double
+    public let isValid: Bool
 }
