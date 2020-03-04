@@ -25,7 +25,7 @@ public class MjolnirController {
     fileprivate var magneticController: MagneticFieldController
     fileprivate var signalAnalyzer: SignalAnalyzer
     
-    fileprivate var magneticReadings = [(time: Double, field: CMMagneticField)]()
+    fileprivate var magneticReadings = [MagneticSample]()
     fileprivate var xResults = [Double]()
     fileprivate var yResults = [Double]()
     fileprivate var zResults = [Double]()
@@ -60,6 +60,8 @@ public class MjolnirController {
     private let windPublisher: PassthroughSubject<WindSample, Never>
     public var publisher: AnyPublisher<WindSample, Never>
     
+    fileprivate var magneticSubscriber: AnyCancellable?
+    
     //MARK: - Lifecycle
     
     public init() {
@@ -77,86 +79,95 @@ public class MjolnirController {
         magneticController.start()
         motionController.start()
         
-        let _ = magneticController.objectWillChange.sink() {
-            self.magneticReadings.append(self.magneticController.magneticReading)
-            
-            guard self.magneticReadings.count % 3 == 0 else {
-                return
-            }
-            
-            let average = self.runAnalysys()
-            
-            // use quadratic interpolation to find peak
-            // Calculate max peak
-            var maxPeak: Double = 0.0
-            var alpha: Double = 0.0
-            var beta: Double = 0.0
-            var gamma: Double = 0.0
-            var p: Double = 0.0
-            var dominantFrequency: Double = 0.0
-            var frequencyMagnitude: Double = 0.0
-            
-            var maxBin = 0
-            
-            for i in 0 ..< MjolnirController.fq40FFTLenght / 2 {
-                
-                if average[i] > maxPeak {
-                    maxBin = i
-                    maxPeak = average[i]
-                }
-            }
-            
-            if (maxBin > 0) && (maxBin < (MjolnirController.fq40FFTLenght / 2) - 1) {
-                alpha = average[maxBin - 1]
-                beta = average[maxBin]
-                gamma = average[maxBin + 1]
-                
-                p = (alpha - gamma) / (2 * (alpha - (2 * beta) + gamma))
-                
-                dominantFrequency  = (Double(maxBin) + p) * self.sampleFrequency / Double(MjolnirController.fq40FFTLenght)
-                frequencyMagnitude = beta - 1/4 * (alpha - gamma) * p
-                
-            } else {
-                dominantFrequency = 0;
-                frequencyMagnitude = 0;
-            }
-            
-            // windspeed
-            
-            let windSpeed = dominantFrequency.toWindSpeed()
-            let windSpeedTime = self.magneticReadings.last?.time ?? 0.0
-            
-            var fftIsValid = false
-            
-            if frequencyMagnitude > MjolnirController.fftPeakMagnitudeMinForValid {
-                fftIsValid = true
-                
-                self.sumOfValidMeasurements += windSpeed
-                if windSpeed > self.maxWindSpeed {
-                    self.maxWindSpeed = windSpeed
-                }
-            } else {
-                fftIsValid = false
-            }
-            
-            self.isValidCurrentStatus = self.computeValidity(for: fftIsValid)
-            
-            let windAverage = self.sumOfValidMeasurements / (Double(self.windData.count) + 1)
-            
-            let sample = WindSample(speed: windSpeed,
-                                    max: self.maxWindSpeed,
-                                    average: windAverage,
-                                    time: windSpeedTime,
-                                    isValid: self.isValidCurrentStatus)
-            
-            self.windData.append(sample)
-            self.windPublisher.send(sample)
-        }
+        magneticSubscriber = magneticController.publisher.sink(receiveCompletion: { error in
+            print(".sink() received the completion", String(describing: error))
+        }, receiveValue: { magneticSample in
+            self.parseSample(magneticSample)
+        })
     }
     
     public func stop() {
         magneticController.stop()
         motionController.stop()
+    }
+    
+    //MARK: - Parsing
+    
+    func parseSample(_ sample: MagneticSample) {
+        
+        self.magneticReadings.append(sample)
+        
+        guard self.magneticReadings.count % 3 == 0 else {
+            return
+        }
+        
+        let average = self.runAnalysys()
+        
+        // use quadratic interpolation to find peak
+        // Calculate max peak
+        var maxPeak: Double = 0.0
+        var alpha: Double = 0.0
+        var beta: Double = 0.0
+        var gamma: Double = 0.0
+        var p: Double = 0.0
+        var dominantFrequency: Double = 0.0
+        var frequencyMagnitude: Double = 0.0
+        
+        var maxBin = 0
+        
+        for i in 0 ..< MjolnirController.fq40FFTLenght / 2 {
+            
+            if average[i] > maxPeak {
+                maxBin = i
+                maxPeak = average[i]
+            }
+        }
+        
+        if (maxBin > 0) && (maxBin < (MjolnirController.fq40FFTLenght / 2) - 1) {
+            alpha = average[maxBin - 1]
+            beta = average[maxBin]
+            gamma = average[maxBin + 1]
+            
+            p = (alpha - gamma) / (2 * (alpha - (2 * beta) + gamma))
+            
+            dominantFrequency  = (Double(maxBin) + p) * self.sampleFrequency / Double(MjolnirController.fq40FFTLenght)
+            frequencyMagnitude = beta - 1/4 * (alpha - gamma) * p
+            
+        } else {
+            dominantFrequency = 0;
+            frequencyMagnitude = 0;
+        }
+        
+        // windspeed
+        
+        let windSpeed = dominantFrequency.toWindSpeed()
+        let windSpeedTime = self.magneticReadings.last?.time ?? 0.0
+        
+        var fftIsValid = false
+        
+        if frequencyMagnitude > MjolnirController.fftPeakMagnitudeMinForValid {
+            fftIsValid = true
+            
+            self.sumOfValidMeasurements += windSpeed
+            if windSpeed > self.maxWindSpeed {
+                self.maxWindSpeed = windSpeed
+            }
+        } else {
+            fftIsValid = false
+        }
+        
+        self.isValidCurrentStatus = self.computeValidity(for: fftIsValid)
+        
+        let windAverage = self.sumOfValidMeasurements / (Double(self.windData.count) + 1)
+        
+        let sample = WindSample(speed: windSpeed,
+                                max: self.maxWindSpeed,
+                                average: windAverage,
+                                time: windSpeedTime,
+                                isValid: self.isValidCurrentStatus)
+        
+        self.windData.append(sample)
+        self.windPublisher.send(sample)
     }
     
     //MARK: - Analysis

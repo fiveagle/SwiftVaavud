@@ -9,21 +9,33 @@
 import Foundation
 import CoreMotion
 import QuartzCore
+import Combine
+
+enum MagneticError: Error {
+    case notAvailable
+    case generic
+}
 
 @available(iOS 13.0, *)
-public class MagneticFieldController: ObservableObject {
+public class MagneticFieldController {
     
     static let sampleFrequency = 100
     
     //MARK: - Properties
     
-    @Published var magneticReading: (Double, CMMagneticField)!
+    private let magneticPublisher: PassthroughSubject<MagneticSample, Error>
+    public var publisher: AnyPublisher<MagneticSample, Error>
     
     fileprivate let motionManager = CMMotionManager()
     fileprivate var operationQueue = OperationQueue.current
     fileprivate var startTime = CACurrentMediaTime()
     
     //MARK: - Lifecycle
+    
+    init() {
+        magneticPublisher = PassthroughSubject<MagneticSample, Error>()
+        publisher = magneticPublisher.eraseToAnyPublisher()
+    }
     
     public func start() {
         startMagneticFieldSensor()
@@ -36,10 +48,12 @@ public class MagneticFieldController: ObservableObject {
     fileprivate func startMagneticFieldSensor() {
         
         guard motionManager.isMagnetometerAvailable else {
+            magneticPublisher.send(completion: Subscribers.Completion.failure(MagneticError.notAvailable))
             return
         }
         
         guard let queue = operationQueue else {
+            magneticPublisher.send(completion: Subscribers.Completion.failure(MagneticError.generic))
             return
         }
         
@@ -56,7 +70,8 @@ public class MagneticFieldController: ObservableObject {
             }
             
             let time = CACurrentMediaTime() - self.startTime
-            self.magneticReading = (time, data.magneticField)
+            
+            self.magneticPublisher.send(MagneticSample(field: data.magneticField, time: time))
         }
     }
 }
